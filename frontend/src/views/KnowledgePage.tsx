@@ -4,11 +4,10 @@ import { api } from "../lib/api";
 import { RISK_DOMAIN_OPTIONS } from "../lib/constants";
 import type { KbSource } from "../lib/types";
 
-type Kb = "regulations" | "standards" | "cases";
+type Kb = "regulations" | "cases";
 
 const SEGMENTS: { key: Kb; label: string }[] = [
   { key: "regulations", label: "法规库" },
-  { key: "standards", label: "标准库" },
   { key: "cases", label: "案例库" },
 ];
 
@@ -35,7 +34,7 @@ export default function KnowledgePage({ toast }: { toast: (msg: string) => void 
   const [file, setFile] = useState<File | null>(null);
   const [uploadOpen, setUploadOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [meta, setMeta] = useState({ domain: "", docType: "law", industryStd: "" });
+  const [meta, setMeta] = useState({ domain: "", docType: "law" });
 
   const loadSources = async () => {
     const [regSources, caseSources] = await Promise.all([api("/api/kb/sources"), api("/api/cases")]);
@@ -48,7 +47,6 @@ export default function KnowledgePage({ toast }: { toast: (msg: string) => void 
   }, []);
 
   const isCases = kb === "cases";
-  const isStd = kb === "standards";
 
   const all = sources.filter((s) => s.kb === kb).sort((a, b) => sourceNumber(a) - sourceNumber(b));
   const pageSize = 10;
@@ -69,10 +67,8 @@ export default function KnowledgePage({ toast }: { toast: (msg: string) => void 
         await api("/api/cases/upload", { method: "POST", body: form });
         toast("案例已入库，风险域与年份已自动识别");
       } else {
-        form.append("kb", kb);
         form.append("domain", meta.domain);
-        if (kb === "standards") form.append("industry", meta.industryStd || "");
-        if (kb === "regulations") form.append("doc_type", meta.docType);
+        form.append("doc_type", meta.docType);
         const payload = await api("/api/kb/upload", { method: "POST", body: form });
         toast(`已入库：${payload.chunk_count} 个分片`);
       }
@@ -115,7 +111,7 @@ export default function KnowledgePage({ toast }: { toast: (msg: string) => void 
 
         <div className="card knowledge-sources-card">
           <div className="card-title-row">
-            <h3>{isCases ? "案例库来源" : isStd ? "标准库来源" : "法规库来源"}</h3>
+            <h3>{isCases ? "案例库来源" : "法规库来源"}</h3>
             <span className="card-hint">共 {all.length} 个文档</span>
           </div>
           <div className="source-list">
@@ -126,9 +122,7 @@ export default function KnowledgePage({ toast }: { toast: (msg: string) => void 
             ) : rows.map((source) => {
               const metaText = isCases
                 ? [source.domain, source.year, source.outcome].filter(Boolean).join(" · ")
-                : isStd
-                  ? (source.industry || "所属行业未识别")
-                  : (source.domain || "");
+                : (source.domain || "");
               return (
                 <div className="source-row" key={source.source_id}>
                   <div className="source-main">
@@ -158,7 +152,7 @@ export default function KnowledgePage({ toast }: { toast: (msg: string) => void 
         <div className="modal-backdrop">
           <div className="modal">
             <div className="modal-head">
-              <h2>上传到{isCases ? "案例库" : isStd ? "标准库" : "法规库"}</h2>
+              <h2>上传到{isCases ? "案例库" : "法规库"}</h2>
               <button className="icon-btn" aria-label="关闭" onClick={() => setUploadOpen(false)}>×</button>
             </div>
             <label className={"drop-zone" + (file ? " has-file" : "")}
@@ -168,7 +162,7 @@ export default function KnowledgePage({ toast }: { toast: (msg: string) => void 
                 onChange={(e) => setFile(e.target.files?.[0] || null)} />
               <div className="drop-inner">
                 <svg viewBox="0 0 24 24" width="26" height="26"><path d="M12 16V4M7 9l5-5 5 5" /><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3" /></svg>
-                <div className="drop-title">{file ? file.name : isCases ? "拖入案例文档，或点击选择" : "拖入法规/标准文档，或点击选择"}</div>
+                <div className="drop-title">{file ? file.name : isCases ? "拖入案例文档，或点击选择" : "拖入法规文档，或点击选择"}</div>
                 <div className="drop-hint">上传后自动切块、向量化并进入检索库</div>
               </div>
             </label>
@@ -180,23 +174,11 @@ export default function KnowledgePage({ toast }: { toast: (msg: string) => void 
                   <option value="">（未分类）</option>
                   {RISK_DOMAIN_OPTIONS.map((d) => <option key={d} value={d}>{d}</option>)}
                 </select>
-                {!isStd && (
-                  <>
-                    <div className="form-label">文档类型</div>
-                    <select value={meta.docType} onChange={(e) => setMeta({ ...meta, docType: e.target.value })}>
-                      <option value="law">法规</option>
-                      <option value="standard">标准</option>
-                      <option value="playbook">方法清单</option>
-                    </select>
-                  </>
-                )}
-                {isStd && (
-                  <>
-                    <div className="form-label">所属行业（选填，未填则按文件名自动识别）</div>
-                    <input type="text" placeholder="例：人工智能 / 半导体 / 医药"
-                      value={meta.industryStd} onChange={(e) => setMeta({ ...meta, industryStd: e.target.value })} />
-                  </>
-                )}
+                <div className="form-label">文档类型</div>
+                <select value={meta.docType} onChange={(e) => setMeta({ ...meta, docType: e.target.value })}>
+                  <option value="law">法规</option>
+                  <option value="playbook">方法清单</option>
+                </select>
               </div>
             )}
 

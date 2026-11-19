@@ -140,14 +140,11 @@ def create_app() -> FastAPI:
         return {"report_id": report_id, "diff": detail.get("diff")}
 
     @app.post("/api/kb/upload")
-    async def kb_upload(file: UploadFile = File(...), kb: str = Form("regulations"), domain: str = Form(""),
-                        doc_type: str = Form("law"), industry: str = Form("")):
-        """上传法规/标准文档入库：解析 → 条文级切块 → 向量化 → 来源登记。"""
-        if kb not in ("regulations", "standards"):
-            raise HTTPException(400, "kb 取值：regulations | standards")
+    async def kb_upload(file: UploadFile = File(...), domain: str = Form(""), doc_type: str = Form("law")):
+        """上传法规文档入库：解析 → 条文级切块 → 向量化 → 来源登记。"""
         tmp = await _save_upload(file)
         try:
-            result = await ingest.ingest_source(kb, file.filename or "document", tmp, domain, doc_type, industry=industry)
+            result = await ingest.ingest_source("regulations", file.filename or "document", tmp, domain, doc_type)
             return result
         except ValueError as exc:
             raise HTTPException(400, str(exc))
@@ -156,7 +153,7 @@ def create_app() -> FastAPI:
 
     @app.get("/api/kb/sources")
     async def kb_sources():
-        """法规库 + 标准库来源列表（案例库走 /api/cases）。"""
+        """法规库来源列表（案例库走 /api/cases）。"""
         with SessionLocal() as session:
             from sqlalchemy import select
             rows = session.execute(

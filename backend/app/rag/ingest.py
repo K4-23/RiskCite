@@ -62,51 +62,12 @@ def extract_text(path: Path, limit: int) -> str:
     return "\n\n".join(parse_file(path))[:limit]
 
 
-# 从文件名识别行业
-INDUSTRY_KEYWORDS = [
-    ("半导体", "半导体"), ("医药", "医药"), ("电动汽车", "汽车与新能源"), ("动力蓄电池", "汽车与新能源"),
-    ("智能制造", "智能制造"), ("电子商务", "互联网平台"), ("平台", "互联网平台"),
-    ("人工智能", "人工智能"), ("AI", "人工智能"), ("生成式", "人工智能"), ("ISO_IEC42001", "人工智能"),
-    ("等级保护", "网络安全"), ("网络安全", "网络安全"),
-    ("知识产权", "知识产权"), ("著作权", "知识产权"),
-    ("科创属性", "科创企业通用"), ("数据资产", "数据与数据资产"),
-    ("出口管制", "跨境贸易与供应链"), ("伦理", "科技伦理"),
-]
-
-
-def guess_industry(name: str) -> str:
-    for kw, industry in INDUSTRY_KEYWORDS:
-        if kw.lower() in name.lower():
-            return industry
-    return ""
-
-
-DOMAIN_KEYWORDS = [
-    ("生成式", "算法与模型"), ("人工智能", "算法与模型"), ("AI", "算法与模型"), ("算法", "算法与模型"),
-    ("个人信息", "数据合规与隐私"), ("数据安全", "数据合规与隐私"), ("数据出境", "数据合规与隐私"),
-    ("等级保护", "网络安全与系统"), ("网络安全", "网络安全与系统"),
-    ("专利", "知识产权"), ("著作权", "知识产权"), ("知识产权", "知识产权"),
-    ("科创属性", "融资与现金流"),
-    ("出口管制", "供应链与地缘"),
-    ("伦理", "伦理与治理"),
-    ("电子商务", "商业化与市场"), ("平台", "商业化与市场"),
-    ("劳动", "组织与人才"),
-]
-
-
-def guess_domain(name: str) -> str:
-    for kw, domain in DOMAIN_KEYWORDS:
-        if kw.lower() in name.lower():
-            return domain
-    return ""
-
-
 ALL_DOMAINS = ["技术与研发", "算法与模型", "数据合规与隐私", "网络安全与系统", "知识产权",
                "商业化与市场", "融资与现金流", "供应链与地缘", "伦理与治理", "组织与人才"]
 
 
 def collection_for(kb: str) -> str:
-    return "regulations" if kb in ("regulations", "standards") else kb
+    return "cases" if kb == "cases" else "regulations"
 
 
 def _enrich_case_metadata(full_text: str, domain: str, year: str, outcome: str):
@@ -127,17 +88,11 @@ def _enrich_case_metadata(full_text: str, domain: str, year: str, outcome: str):
 async def ingest_source(kb: str, original_name: str, tmp_path: Path,
                         domain: str = "", doc_type: str = "law",
                         industry: str = "", stage: str = "", year: str = "", outcome: str = "") -> dict:
-    if kb not in ("regulations", "standards", "cases"):
+    if kb not in ("regulations", "cases"):
         raise ValueError(f"未知知识库：{kb}")
     ext = Path(original_name).suffix.lower()
     if ext not in ALLOWED_EXTENSIONS:
         raise ValueError(f"不支持的文件类型：{ext}")
-
-    if kb == "standards":
-        if not industry:
-            industry = guess_industry(original_name)
-        if not domain:
-            domain = guess_domain(original_name)
 
     source_id = uuid.uuid4().hex[:16]
     stored_dir = settings.uploads_path / kb
@@ -167,7 +122,7 @@ async def ingest_source(kb: str, original_name: str, tmp_path: Path,
         metadatas.append(meta)
 
     # 法规按条文切分
-    law_chunks = split_law_chunks(full_text) if kb in ("regulations", "standards") else None
+    law_chunks = split_law_chunks(full_text) if kb == "regulations" else None
     if law_chunks:
         for label, piece in law_chunks:
             _add(piece, label, article=label if label != "文件头" else None)
