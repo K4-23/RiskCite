@@ -53,7 +53,7 @@ def test_claimed_source_not_propagated_on_unverified():
 
 def test_evidence_l3_needs_check():
     graded = grade_evidence([{"text": "完全没有任何匹配的句子"}], [], "完全无关的企业材料内容")
-    assert graded[0]["grade"] == "L3" and graded[0]["cap"] == 0.5
+    assert graded[0]["grade"] == "L3"
 
 
 def _finding(**kw):

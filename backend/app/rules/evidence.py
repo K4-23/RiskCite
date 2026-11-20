@@ -7,7 +7,6 @@ from difflib import SequenceMatcher
 
 MIN_OVERLAP = 8      # 条文定位的最小重合字数
 MATCH_SCORE = 8      # 证据命中阈值（中文 1 分/字，英文 2 分/词）
-GRADE_CAP = {"L1": 0.9, "L2": 0.7, "L3": 0.5}
 
 # 否定式陈述不计为证据
 NEGATIVE_HINTS = ("材料未", "材料中未", "材料没有", "未提供", "未包含", "未提及", "未见相关",
@@ -100,7 +99,7 @@ def grade_evidence(entries: list[dict], candidates: list[dict], company_text: st
         text = str(entry.get("text") or "").strip()
         declared = entry.get("grade")
         # 来源以比对结果为准
-        item = {"text": text, "source": None, "article": None, "grade": "L3", "cap": GRADE_CAP["L3"]}
+        item = {"text": text, "source": None, "article": None, "grade": "L3"}
 
         # 否定式陈述不参与比对
         if is_negative_evidence(text):
@@ -120,13 +119,12 @@ def grade_evidence(entries: list[dict], candidates: list[dict], company_text: st
 
         if best_hit:
             article = best_hit["article"] or locate_article(best_hit["content"], text)
-            item.update(grade="L1", cap=GRADE_CAP["L1"], source=best_hit["source_name"],
-                        article=article, verified=True)
+            item.update(grade="L1", source=best_hit["source_name"], article=article, verified=True)
         elif company_tokens and _max_weighted_run(quote_tokens, company_tokens) >= MATCH_SCORE:
-            item.update(grade="L1", cap=GRADE_CAP["L1"], source="企业材料", verified=True)
+            item.update(grade="L1", source="企业材料", verified=True)
         elif declared == "L1":
-            item.update(grade="L2", cap=GRADE_CAP["L2"], demoted_from="L1")
+            item.update(grade="L2", demoted_from="L1")
         elif declared == "L2":
-            item.update(grade="L2", cap=GRADE_CAP["L2"])
+            item.update(grade="L2")
         graded.append(item)
     return graded

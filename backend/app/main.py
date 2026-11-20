@@ -140,7 +140,8 @@ def create_app() -> FastAPI:
         return {"report_id": report_id, "diff": detail.get("diff")}
 
     @app.post("/api/kb/upload")
-    async def kb_upload(file: UploadFile = File(...), domain: str = Form(""), doc_type: str = Form("law")):
+    async def kb_upload(file: UploadFile = File(...), domain: str = Form(""),
+                        doc_type: str = Form("law")):
         """上传法规文档入库：解析 → 条文级切块 → 向量化 → 来源登记。"""
         tmp = await _save_upload(file)
         try:
@@ -157,9 +158,9 @@ def create_app() -> FastAPI:
         with SessionLocal() as session:
             from sqlalchemy import select
             rows = session.execute(
-                select(SourceRow).where(SourceRow.kb != "cases").order_by(SourceRow.created_at.desc())
+                select(SourceRow).where(SourceRow.kb == "regulations").order_by(SourceRow.created_at.desc())
             ).scalars().all()
-            return [{"source_id": r.source_id, "kb": r.kb, "domain": r.domain, "doc_type": r.doc_type, "industry": r.industry,
+            return [{"source_id": r.source_id, "kb": r.kb, "domain": r.domain, "doc_type": r.doc_type,
                      "original_name": r.original_name, "chunk_count": r.chunk_count,
                      "created_at": r.created_at.isoformat()} for r in rows]
 

@@ -62,11 +62,13 @@ def extract_text(path: Path, limit: int) -> str:
     return "\n\n".join(parse_file(path))[:limit]
 
 
+# 案例入库时按全文识别风险域（案例可同时属于多个域）
 ALL_DOMAINS = ["技术与研发", "算法与模型", "数据合规与隐私", "网络安全与系统", "知识产权",
                "商业化与市场", "融资与现金流", "供应链与地缘", "伦理与治理", "组织与人才"]
 
 
 def collection_for(kb: str) -> str:
+    # 历史数据里若还有旧库的 kb 值，向量都落在 regulations 集合
     return "cases" if kb == "cases" else "regulations"
 
 
@@ -88,6 +90,7 @@ def _enrich_case_metadata(full_text: str, domain: str, year: str, outcome: str):
 async def ingest_source(kb: str, original_name: str, tmp_path: Path,
                         domain: str = "", doc_type: str = "law",
                         industry: str = "", stage: str = "", year: str = "", outcome: str = "") -> dict:
+    """文档入库。regulations 按条文切块；cases 另记行业/阶段/年份/结局。"""
     if kb not in ("regulations", "cases"):
         raise ValueError(f"未知知识库：{kb}")
     ext = Path(original_name).suffix.lower()

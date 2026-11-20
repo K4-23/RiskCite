@@ -63,8 +63,6 @@ def compose_report(state: dict) -> str:
     counts = {"high": 0, "medium": 0, "low": 0}
     for f in findings:
         counts[f["severity"]] = counts.get(f["severity"], 0) + 1
-    covered = {f["domain"] for f in findings}
-    uncovered = [CHANNELS[c]["name"] for c in CHANNELS if c not in covered and c not in state.get("channels", [])]
     enabled_names = [CHANNELS[c]["name"] for c in state.get("channels", [])]
 
     stage_label = {"seed": "种子期", "growth": "成长期", "mature": "成熟期"}.get(profile.get("lifeStage"), "未判定")
@@ -114,7 +112,7 @@ def compose_report(state: dict) -> str:
     else:
         md.append("（无）")
     md += ["", "## 六、覆盖范围", ""]
-    md.append(f"- 未启用/未覆盖域：{'、'.join(uncovered) or '无'}")
+    md.append(f"- 本次覆盖：{'、'.join(enabled_names) or '无'}")
     if state.get("degradation"):
         md += ["", "## 七、降级说明", ""]
         for note in dict.fromkeys(state["degradation"]):

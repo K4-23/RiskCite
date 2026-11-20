@@ -3,7 +3,7 @@ export const SEVERITY_TEXT: Record<string, string> = { high: "高风险", medium
 export const SEVERITY_COLOR: Record<string, string> = { high: "red", medium: "yellow", low: "green" };
 
 export const GRADE_TEXT: Record<string, string> = { L1: "L1 原文核验", L2: "L2 间接佐证", L3: "L3 待核查" };
-export const VERDICT_TEXT: Record<string, string> = { pass: "通过", revised: "已补证修订", needEvidence: "证据不足", misjudged: "判断不当" };
+export const VERDICT_TEXT: Record<string, string> = { pass: "通过", needEvidence: "证据不足", misjudged: "判断不当" };
 
 export const CHANNELS = [
   { id: "tech", name: "技术与研发", code: "01" },

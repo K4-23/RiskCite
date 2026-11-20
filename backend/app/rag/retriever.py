@@ -82,11 +82,6 @@ def invalidate_cache(coll_name: str) -> None:
         _pool_cache.pop(key, None)
 
 
-def clear_caches() -> None:
-    _bm25_cache.clear()
-    _pool_cache.clear()
-
-
 async def retrieve(domain: str, query: str, top_n: int | None = None) -> list[dict]:
     """按风险域检索法规证据。返回 [{id, content, source_name, score}]。"""
     coll_name = "regulations"

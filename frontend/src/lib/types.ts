@@ -42,7 +42,6 @@ export interface ReportSummary {
   companyName?: string;
   created_at: string;
   lifeStage?: string;
-  llmMode?: string;
   severityCounts?: Record<string, number>;
   obligationViolations?: number;
 }
@@ -77,8 +76,6 @@ export interface KbSource {
   source_id: string;
   kb: string;
   domain?: string;
-  doc_type?: string;
-  industry?: string;
   original_name: string;
   chunk_count?: number;
   year?: string;
