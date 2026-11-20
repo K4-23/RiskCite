@@ -71,7 +71,7 @@ export default function Dashboard({
       </div>
 
       <div className="dashboard-toolbar">
-        <input type="search" placeholder="搜索企业名称…" value={query}
+        <input id="dashboardSearch" type="search" placeholder="搜索企业名称…" value={query}
           onChange={(e) => { setQuery(e.target.value); setLimit(20); }} />
         <div className="filter-chips">
           {FILTERS.map((f) => (
